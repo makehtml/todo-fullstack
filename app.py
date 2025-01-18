@@ -81,7 +81,8 @@ def login():
     password = data.get("password")
 
     if username in users and users[username] == password:
-        token = create_access_token(identity=username)
+        roles = "admin" if username == "frodo" else "user"
+        token = create_access_token(identity={"username": username, "roles": roles})
         return jsonify({"access_token": token}), 200
 
     return jsonify({"error": "Неверные логин или пароль"}), 401
@@ -91,6 +92,15 @@ def login():
 def protected():
     current_user = get_jwt_identity()
     return jsonify({"message": f"Добро пожаловать, {current_user}!"}), 200
+
+@app.get("/admin")
+@jwt_required()
+def admin_route():
+    user = get_jwt_identity()
+    if user.get("roles") != "admin":
+        return jsonify({"error": "Доступ запрещён"}), 403
+
+    return jsonify({"message": "Добро пожаловать, администратор!"}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
