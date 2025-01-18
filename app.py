@@ -62,5 +62,13 @@ def delete_task(task_id):
     tasks = [t for t in tasks if t["id"] != task_id]
     return jsonify({"message": "Задача удалена"})
 
+@app.errorhandler(500)
+def handle_500_error(e):
+    return make_response("error", "Что-то пошло не так на сервере"), 500
+
+@app.errorhandler(404)
+def handle_404_error(e):
+    return make_response("error", "Ресурс не найден"), 404
+
 if __name__ == "__main__":
     app.run(debug=True)
