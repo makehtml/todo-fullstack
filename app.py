@@ -10,6 +10,7 @@ tasks = [
     {"id": 1, "title": "Сделать урок по REST API", "completed": False},
     {"id": 2, "title": "Сходить за кофе", "completed": True},
 ]
+users = {"frodo": "myprecious", "sam": "po-ta-toes"}
 
 def make_response(status, message, data=None):
     return jsonify({
@@ -17,6 +18,14 @@ def make_response(status, message, data=None):
         "message": message,
         "data": data
     })
+
+@app.errorhandler(500)
+def handle_500_error(e):
+    return make_response("error", "Что-то пошло не так на сервере"), 500
+
+@app.errorhandler(404)
+def handle_404_error(e):
+    return make_response("error", "Ресурс не найден"), 404
 
 @app.get("/")
 def index():
@@ -65,13 +74,17 @@ def delete_task(task_id):
     tasks = [t for t in tasks if t["id"] != task_id]
     return jsonify({"message": "Задача удалена"})
 
-@app.errorhandler(500)
-def handle_500_error(e):
-    return make_response("error", "Что-то пошло не так на сервере"), 500
+@app.post("/login")
+def login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
 
-@app.errorhandler(404)
-def handle_404_error(e):
-    return make_response("error", "Ресурс не найден"), 404
+    if username in users and users[username] == password:
+        token = create_access_token(identity=username)
+        return jsonify({"access_token": token}), 200
+
+    return jsonify({"error": "Неверные логин или пароль"}), 401
 
 if __name__ == "__main__":
     app.run(debug=True)
