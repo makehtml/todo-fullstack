@@ -26,9 +26,12 @@ def get_task(task_id):
 @app.post("/api/tasks")
 def create_task():
     data = request.get_json()
+    if not data or "title" not in data:
+        return jsonify({"error": "Поле 'title' обязательно"}), 400
+
     new_task = {
         "id": len(tasks) + 1,
-        "title": data.get("title", "Без названия"),
+        "title": data["title"],
         "completed": False,
     }
     tasks.append(new_task)
