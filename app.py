@@ -86,5 +86,11 @@ def login():
 
     return jsonify({"error": "Неверные логин или пароль"}), 401
 
+@app.get("/protected")
+@jwt_required()
+def protected():
+    current_user = get_jwt_identity()
+    return jsonify({"message": f"Добро пожаловать, {current_user}!"}), 200
+
 if __name__ == "__main__":
     app.run(debug=True)
