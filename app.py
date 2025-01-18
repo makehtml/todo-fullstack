@@ -8,6 +8,13 @@ tasks = [
     {"id": 2, "title": "Сходить за кофе", "completed": True},
 ]
 
+def make_response(status, message, data=None):
+    return jsonify({
+        "status": status,
+        "message": message,
+        "data": data
+    })
+
 @app.get("/")
 def index():
     return "Добро пожаловать в ToDo API!"
@@ -19,9 +26,10 @@ def get_tasks():
 @app.get("/api/tasks/<int:task_id>")
 def get_task(task_id):
     task = next((t for t in tasks if t["id"] == task_id), None)
-    if task:
-        return jsonify(task)
-    return jsonify({"error": "Задача не найдена"}), 404
+    if not task:
+        return make_response("error", "Задача не найдена"), 404
+
+    return make_response("success", "Задача найдена", task)
 
 @app.post("/api/tasks")
 def create_task():
