@@ -5,7 +5,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = "super_secret_key"  # Замените на свой секретный ключ!
+app.config["JWT_SECRET_KEY"] = "super_secret_keyqwe"  # Замените на свой секретный ключ!
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 JWTManager(app)
 
@@ -15,7 +15,7 @@ tasks = [
     {"id": str(uuid4()), "title": "Сделать урок по REST API", "completed": False},
     {"id": str(uuid4()), "title": "Сходить за кофе", "completed": True},
 ]
-users = {"frodo": "myprecious", "sam": "po-ta-toes"}
+users = {"frodo": "asd", "sam": "dsa"}
 
 def make_response(status, message, data=None):
     return jsonify({
@@ -40,7 +40,7 @@ def index():
 def get_tasks():
     return jsonify(tasks)
 
-@app.get("/api/tasks/<int:task_id>")
+@app.get("/api/tasks/<task_id>")
 def get_task(task_id):
     task = next((t for t in tasks if t["id"] == task_id), None)
     if not task:
@@ -70,7 +70,7 @@ def create_task():
     tasks.append(new_task)
     return jsonify(new_task), 201
 
-@app.put("/api/tasks/<int:task_id>")
+@app.put("/api/tasks/<task_id>")
 def update_task(task_id):
     data = request.get_json()
     task = next((t for t in tasks if t["id"] == task_id), None)
@@ -81,7 +81,7 @@ def update_task(task_id):
     task["completed"] = data.get("completed", task["completed"])
     return jsonify(task)
 
-@app.delete("/api/tasks/<int:task_id>")
+@app.delete("/api/tasks/<task_id>")
 def delete_task(task_id):
     global tasks
     tasks = [t for t in tasks if t["id"] != task_id]
@@ -91,7 +91,7 @@ def delete_task(task_id):
 def get_data():
     return jsonify({"message": "Привет из Flask!", "items": [1, 2, 3, 4, 5]})
 
-@app.post("/login")
+@app.post("/api/login")
 def login():
     data = request.get_json()
     username = data.get("username")
@@ -104,17 +104,17 @@ def login():
 
     return jsonify({"error": "Неверные логин или пароль"}), 401
 
-@app.get("/protected")
+@app.get("/api/protected")
 @jwt_required()
 def protected():
     current_user = get_jwt_identity()
     return jsonify({"message": f"Добро пожаловать, {current_user}!"}), 200
 
-@app.get("/admin")
+@app.get("/api/admin")
 @jwt_required()
 def admin_route():
-    user = get_jwt_identity()
-    if user.get("roles") != "admin":
+    current_user = get_jwt_identity()
+    if "admin" not in current_user.get("roles"):
         return jsonify({"error": "Доступ запрещён"}), 403
 
     return jsonify({"message": "Добро пожаловать, администратор!"}), 200
