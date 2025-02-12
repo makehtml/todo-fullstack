@@ -1,14 +1,19 @@
+from uuid import uuid4
+
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "super_secret_key"  # Замените на свой секретный ключ!
-jwt = JWTManager(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+JWTManager(app)
+
 
 # Пример данных (наш "мини-склад задач")
 tasks = [
-    {"id": 1, "title": "Сделать урок по REST API", "completed": False},
-    {"id": 2, "title": "Сходить за кофе", "completed": True},
+    {"id": str(uuid4()), "title": "Сделать урок по REST API", "completed": False},
+    {"id": str(uuid4()), "title": "Сходить за кофе", "completed": True},
 ]
 users = {"frodo": "myprecious", "sam": "po-ta-toes"}
 
@@ -43,6 +48,14 @@ def get_task(task_id):
 
     return make_response("success", "Задача найдена", task)
 
+@app.route("/api/tasks/<task_id>", methods=["OPTIONS"])
+def options_task(task_id):
+    response = jsonify({"message": "Preflight request successful"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    return response, 200
+
 @app.post("/api/tasks")
 def create_task():
     data = request.get_json()
@@ -50,7 +63,7 @@ def create_task():
         return jsonify({"error": "Поле 'title' обязательно"}), 400
 
     new_task = {
-        "id": len(tasks) + 1,
+        "id": str(uuid4()),
         "title": data["title"],
         "completed": False,
     }
@@ -63,16 +76,20 @@ def update_task(task_id):
     task = next((t for t in tasks if t["id"] == task_id), None)
     if not task:
         return jsonify({"error": "Задача не найдена"}), 404
-    
+
     task["title"] = data.get("title", task["title"])
     task["completed"] = data.get("completed", task["completed"])
     return jsonify(task)
 
-@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+@app.delete("/api/tasks/<int:task_id>")
 def delete_task(task_id):
     global tasks
     tasks = [t for t in tasks if t["id"] != task_id]
     return jsonify({"message": "Задача удалена"})
+
+@app.get("/api/data")
+def get_data():
+    return jsonify({"message": "Привет из Flask!", "items": [1, 2, 3, 4, 5]})
 
 @app.post("/login")
 def login():
